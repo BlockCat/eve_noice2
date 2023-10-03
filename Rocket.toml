@@ -1,0 +1,11 @@
+[global.oauth.eve]
+provider = "GitHub"
+client_id = "..."
+client_secret = "..."
+redirect_uri = "http://localhost:8000/auth/github"
+
+[default.databases.sqlite_eve]
+url = "database.db"
+
+[default]
+regions = { "The Forge" = 10000002, "Domain" = 10000043 }

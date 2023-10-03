@@ -48,6 +48,7 @@ impl MarketOrderRepository {
                         e
                     })?;
             }
+            transaction.commit().await?;
         }
 
         let mut connection = lock.acquire().await?;

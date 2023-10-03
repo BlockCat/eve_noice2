@@ -94,7 +94,7 @@ async fn start_actors(
             item_repository.clone(),
         );
 
-        history_actors.iter().for_each(|s| s.do_send(StartActor));
+        // history_actors.iter().for_each(|s| s.do_send(StartActor));
         order_actors.iter().for_each(|s| s.do_send(StartActor));
 
         let history_scheduler = actors::UpdateScheduler::new(
@@ -117,13 +117,18 @@ struct SimpleLogger;
 
 impl log::Log for SimpleLogger {
     fn enabled(&self, metadata: &Metadata) -> bool {
-        metadata.level() <= Level::Info
+        metadata.level() <= Level::Debug && metadata.target().starts_with("noice2")
         // true
     }
 
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
-            println!("{} - {}", record.level(), record.args());
+            println!(
+                "{} - {} - {}",
+                record.level(),
+                record.target(),
+                record.args()
+            );
         }
     }
 

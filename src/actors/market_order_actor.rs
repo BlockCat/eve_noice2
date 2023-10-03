@@ -32,11 +32,11 @@ impl Actor for MarketOrderActor {
     type Context = Context<Self>;
 
     fn started(&mut self, _ctx: &mut Self::Context) {
-        log::debug!("MarketOrderActor created for region: {}", self.region_id);
+        log::info!("MarketOrderActor created for region: {}", self.region_id);
     }
 
     fn stopping(&mut self, _ctx: &mut Self::Context) -> actix::Running {
-        log::debug!("MarketOrderActor stopping for region: {}", self.region_id);
+        log::info!("MarketOrderActor stopping for region: {}", self.region_id);
         if let Some(handle) = self.handle.take() {
             handle.abort();
         }
@@ -48,7 +48,7 @@ impl Handler<StartActor> for MarketOrderActor {
     type Result = ();
 
     fn handle(&mut self, _: StartActor, _ctx: &mut Self::Context) -> Self::Result {
-        log::trace!("MarketOrderActor received StartActor message");
+        log::info!("MarketOrderActor received StartActor message");
         if let Some(handle) = &self.handle {
             if !handle.is_finished() {
                 log::warn!(

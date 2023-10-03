@@ -1,7 +1,6 @@
-use reqwest::{Client, StatusCode};
-use rocket::futures::future::try_join_all;
-
 use self::errors::EsiError;
+use futures::future::try_join_all;
+use reqwest::{Client, StatusCode};
 
 pub mod errors;
 pub mod models;

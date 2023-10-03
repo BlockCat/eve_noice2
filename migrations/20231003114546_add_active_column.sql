@@ -1,0 +1,2 @@
+ALTER TABLE market_orders
+    ADD COLUMN active BOOLEAN NOT NULL DEFAULT TRUE;

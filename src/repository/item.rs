@@ -1,9 +1,15 @@
 use std::{collections::HashSet, sync::Arc};
 
-use rocket::tokio::sync::Mutex;
 use sqlx::SqlitePool;
+use tokio::sync::Mutex;
 
 pub struct ItemRepository(Arc<Mutex<SqlitePool>>);
+
+impl Clone for ItemRepository {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
 
 impl ItemRepository {
     pub fn new(pool: Arc<Mutex<SqlitePool>>) -> Self {

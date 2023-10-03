@@ -8,7 +8,7 @@ use std::{
 };
 
 fn main() {
-    rocket::tokio::runtime::Builder::new_current_thread()
+    tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
         .unwrap()

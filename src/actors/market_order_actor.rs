@@ -1,20 +1,28 @@
 use super::StartActor;
-use crate::{actions::update_order_for_region, repository::MarketOrderRepository};
+use crate::{
+    actions::update_order_for_region,
+    repository::{ItemRepository, MarketOrderRepository},
+};
 use actix::{Actor, Context, Handler};
 use tokio;
 
 pub struct MarketOrderActor {
     pub region_id: usize,
     pub market_order_repository: MarketOrderRepository,
-
+    pub item_repository: ItemRepository,
     handle: Option<tokio::task::JoinHandle<()>>,
 }
 
 impl MarketOrderActor {
-    pub fn new(region_id: usize, market_order_repository: MarketOrderRepository) -> Self {
+    pub fn new(
+        region_id: usize,
+        market_order_repository: MarketOrderRepository,
+        item_repository: ItemRepository,
+    ) -> Self {
         Self {
             region_id,
             market_order_repository,
+            item_repository,
             handle: None,
         }
     }
@@ -53,9 +61,10 @@ impl Handler<StartActor> for MarketOrderActor {
         log::debug!("MarketOrderActor starting for region: {}", self.region_id);
         let region_id = self.region_id.clone();
         let market_order_repository = self.market_order_repository.clone();
-
+        let item_repository = self.item_repository.clone();
         let handle = tokio::spawn(async move {
-            match update_order_for_region(region_id, market_order_repository).await {
+            match update_order_for_region(region_id, market_order_repository, item_repository).await
+            {
                 Ok(_) => log::info!("MarketOrderActor finished for region: {}", region_id),
                 Err(e) => log::error!("MarketOrderActor failed for region: {}, {:?}", region_id, e),
             }

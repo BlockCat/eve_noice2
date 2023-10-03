@@ -1,7 +1,10 @@
 use actix::{Actor, Addr};
+use actix_rt::{Arbiter, System};
 use actix_web::{web, App, HttpServer};
 use actors::{StartActor, UpdateScheduler};
-use log::{LevelFilter, Metadata, Record};
+use esi::EsiClient;
+use futures::future::{self, Lazy};
+use log::{Level, LevelFilter, Metadata, Record};
 use repository::{ItemRepository, MarketHistoryRepository, MarketOrderRepository};
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
 use std::sync::Arc;
@@ -15,7 +18,6 @@ mod eve_auth;
 mod repository;
 
 static LOGGER: SimpleLogger = SimpleLogger;
-
 pub struct ActixHandle(Arc<JoinHandle<()>>);
 
 impl Clone for ActixHandle {
@@ -35,6 +37,8 @@ async fn main() -> std::io::Result<()> {
     log::set_logger(&LOGGER)
         .map(|()| log::set_max_level(LevelFilter::Debug))
         .unwrap();
+
+    EsiClient::new(20);
 
     let pool = load_sqlite().await;
 
@@ -61,7 +65,6 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(pool.clone()))
     })
     .bind(("127.0.0.1", 8080))?
-    .workers(2)
     .run()
     .await
 }
@@ -82,11 +85,14 @@ async fn start_actors(
         let history_actors = actors::load_market_history_actors(
             &[10000002, 10000043],
             market_history_repository,
-            item_repository,
+            item_repository.clone(),
         );
 
-        let order_actors =
-            actors::load_market_order_actors(&[10000002, 10000043], market_order_repository);
+        let order_actors = actors::load_market_order_actors(
+            &[10000002, 10000043],
+            market_order_repository,
+            item_repository.clone(),
+        );
 
         history_actors.iter().for_each(|s| s.do_send(StartActor));
         order_actors.iter().for_each(|s| s.do_send(StartActor));
@@ -110,9 +116,9 @@ async fn start_actors(
 struct SimpleLogger;
 
 impl log::Log for SimpleLogger {
-    fn enabled(&self, _metadata: &Metadata) -> bool {
-        // metadata.level() <= Level::Info
-        true
+    fn enabled(&self, metadata: &Metadata) -> bool {
+        metadata.level() <= Level::Info
+        // true
     }
 
     fn log(&self, record: &Record) {

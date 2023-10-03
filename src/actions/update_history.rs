@@ -2,7 +2,7 @@ use chrono::{DateTime, Datelike, NaiveTime, TimeZone, Timelike, Utc};
 use futures::future::try_join_all;
 
 use crate::{
-    esi::{create_client, get_market_history, get_market_region_types},
+    esi::{get_market_history, get_market_region_types, EsiClient},
     repository::{ItemRepository, MarketHistoryRepository},
 };
 
@@ -13,7 +13,7 @@ pub async fn update_history_for_region(
     mut market_history_repository: MarketHistoryRepository,
     mut item_repository: ItemRepository,
 ) -> Result<(), UpdateError> {
-    let client = create_client();
+    let client = EsiClient::current();
 
     log::debug!("Starting history for region: {}", region_id);
 
@@ -29,7 +29,7 @@ pub async fn update_history_for_region(
         .await
         .map_err(|e| UpdateError::MarketHistorySql(e, region_id))?;
 
-    let region_types = get_market_region_types(&client, region_id)
+    let region_types = get_market_region_types(client.clone(), region_id)
         .await
         .map_err(|e| UpdateError::MarketHistoryEsi(e, region_id))?
         .into_iter()
@@ -44,31 +44,52 @@ pub async fn update_history_for_region(
         region_types.len()
     );
 
-    let mut added = Vec::with_capacity(region_types.len());
-
-    let chunk_size = 100;
+    let chunk_size = 300;
     let chunk_len = region_types.len() / chunk_size;
 
     for (chunk, types) in region_types.chunks(chunk_size).enumerate() {
         let a = try_join_all(types.iter().map(|type_id| async {
-            get_market_history(&client, region_id, *type_id)
+            get_market_history(client.clone(), region_id, *type_id)
                 .await
                 .map(|history| (*type_id, history))
         }))
         .await;
 
         match a {
-            Ok(x) => {
-                added.extend(x);
+            Ok(added) => {
+                let added = added
+                    .into_iter()
+                    .flat_map(|(id, history)| {
+                        history
+                            .into_iter()
+                            .filter(|item| {
+                                if let Some(latest) = latest_histories.get(&id) {
+                                    return Utc.from_utc_datetime(
+                                        &item
+                                            .date
+                                            .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap()),
+                                    ) > *latest;
+                                }
+                                true
+                            })
+                            .map(|item| (id, item))
+                            .collect::<Vec<_>>()
+                    })
+                    .collect::<Vec<_>>();
+
+                let _ = market_history_repository
+                    .insert_items(added, region_id)
+                    .await
+                    .map_err(|e| UpdateError::MarketHistorySql(e, region_id));
                 log::info!(
-                    "Collected orders for region: {}  chunk({}/{})",
+                    "Collected history for region: {}  chunk({}/{})",
                     region_id,
                     chunk,
                     chunk_len
                 );
             }
             Err(e) => log::info!(
-                "Failed collecting orders for region: {}, chunk({}/{}), {:?}",
+                "Failed collecting history for region: {}, chunk({}/{}), {:?}",
                 region_id,
                 chunk,
                 chunk_len,
@@ -77,30 +98,7 @@ pub async fn update_history_for_region(
         }
     }
 
-    let added = added
-        .into_iter()
-        .flat_map(|(id, history)| {
-            history
-                .into_iter()
-                .filter(|item| {
-                    if let Some(latest) = latest_histories.get(&id) {
-                        return Utc.from_utc_datetime(
-                            &item
-                                .date
-                                .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap()),
-                        ) > *latest;
-                    }
-                    true
-                })
-                .map(|item| (id, item))
-                .collect::<Vec<_>>()
-        })
-        .collect::<Vec<_>>();
-
-    market_history_repository
-        .insert_items(added, region_id)
-        .await
-        .map_err(|e| UpdateError::MarketHistorySql(e, region_id))
+    Ok(())
 }
 
 fn current_market_date() -> DateTime<Utc> {

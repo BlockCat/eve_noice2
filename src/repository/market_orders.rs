@@ -40,8 +40,13 @@ impl MarketOrderRepository {
                 let system_id = order.system_id as i64;
                 let volume_remain = order.volume_remain as i64;
                 let volume_total = order.volume_total as i64;
-                sqlx::query!("INSERT OR IGNORE INTO market_orders (buy_order, issued, expiry, order_id, item_id, system_id, volume_remain, volume_total) VALUES (?,?,?,?,?,?,?,?)", 
-                    order.is_buy_order, order.issued, expiry, order_id, type_id, system_id, volume_remain, volume_total).execute(transaction.as_mut()).await?;
+                let price = order.price as f32;
+                sqlx::query!("INSERT OR IGNORE INTO market_orders (buy_order, issued, expiry, order_id, item_id, system_id, volume_remain, volume_total, price) VALUES (?,?,?,?,?,?,?,?, ?)", 
+                    order.is_buy_order, order.issued, expiry, order_id, type_id, system_id, volume_remain, volume_total, price).execute(transaction.as_mut()).await
+                    .map_err(|e| {
+                        log::error!("Failed to insert order: {:?}. tid: {}, sid: {}", e.to_string(), type_id, system_id);
+                        e
+                    })?;
             }
         }
 

@@ -34,11 +34,16 @@ pub fn load_market_history_actors(
 pub fn load_market_order_actors(
     regions: &[usize],
     market_order_repository: MarketOrderRepository,
+    item_repository: ItemRepository,
 ) -> Vec<Addr<MarketOrderActor>> {
     regions
         .iter()
         .map(|region_id| {
-            let actor = MarketOrderActor::new(*region_id, market_order_repository.clone());
+            let actor = MarketOrderActor::new(
+                *region_id,
+                market_order_repository.clone(),
+                item_repository.clone(),
+            );
             let addr = actor.start();
             addr
         })

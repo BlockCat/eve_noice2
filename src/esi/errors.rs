@@ -1,4 +1,3 @@
-
 #[derive(Debug)]
 pub enum EsiError {
     ErrorResponse,
@@ -9,4 +8,6 @@ pub enum EsiError {
     PublishCheck(reqwest::Error, usize),
     ErrorLimited,
     NotPublished(usize),
+    JsonError(reqwest::Error),
+    ConnectionError(reqwest::Error),
 }

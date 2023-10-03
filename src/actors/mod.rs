@@ -25,8 +25,8 @@ pub fn load_market_history_actors(
                 market_history_repository.clone(),
                 item_repository.clone(),
             );
-            let addr = actor.start();
-            addr
+            
+            actor.start()
         })
         .collect()
 }
@@ -44,8 +44,8 @@ pub fn load_market_order_actors(
                 market_order_repository.clone(),
                 item_repository.clone(),
             );
-            let addr = actor.start();
-            addr
+            
+            actor.start()
         })
         .collect()
 }

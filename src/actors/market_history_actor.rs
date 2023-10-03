@@ -3,7 +3,7 @@ use crate::{
     repository::{ItemRepository, MarketHistoryRepository},
 };
 use actix::{Actor, Context, Handler};
-use tokio;
+
 
 use super::StartActor;
 
@@ -61,7 +61,7 @@ impl Handler<StartActor> for MarketHistoryActor {
             }
         }
         log::debug!("MarketHistoryActor starting for region: {}", self.region_id);
-        let region_id = self.region_id.clone();
+        let region_id = self.region_id;
         let market_history_repository = self.market_history_repository.clone();
         let item_repository = self.item_repository.clone();
 

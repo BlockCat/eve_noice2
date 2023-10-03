@@ -4,7 +4,7 @@ use crate::{
     repository::{ItemRepository, MarketOrderRepository},
 };
 use actix::{Actor, Context, Handler};
-use tokio;
+
 
 pub struct MarketOrderActor {
     pub region_id: usize,
@@ -59,7 +59,7 @@ impl Handler<StartActor> for MarketOrderActor {
             }
         }
         log::debug!("MarketOrderActor starting for region: {}", self.region_id);
-        let region_id = self.region_id.clone();
+        let region_id = self.region_id;
         let market_order_repository = self.market_order_repository.clone();
         let item_repository = self.item_repository.clone();
         let handle = tokio::spawn(async move {

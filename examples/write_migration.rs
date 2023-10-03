@@ -39,19 +39,19 @@ async fn start() {
     let sde = read_sde("./data/sde");
 
     migration.push_str(&create_region_migrations(&sqlx, &sde).await);
-    migration.push_str("\n");
+    migration.push('\n');
 
     migration.push_str(&create_system_migrations(&sqlx, &sde).await);
-    migration.push_str("\n");
+    migration.push('\n');
 
     migration.push_str(&create_group_migrations(&sqlx, &sde).await);
-    migration.push_str("\n");
+    migration.push('\n');
 
     migration.push_str(&create_market_group_migrations(&sqlx, &sde).await);
-    migration.push_str("\n");
+    migration.push('\n');
 
     migration.push_str(&create_type_migrations(&sqlx, &sde).await);
-    migration.push_str("\n");
+    migration.push('\n');
 
     std::fs::write(migration_path, migration).unwrap();
 }
@@ -393,7 +393,7 @@ fn load_regions(path: &Path) -> (HashMap<usize, String>, HashMap<usize, (String,
                 if system.path().is_dir() {
                     let static_data: SolarSystemStaticData = serde_yaml::from_reader(
                         File::open(system.path().join("solarsystem.staticdata"))
-                            .expect(&format!("Could not read file: {:?}", static_data)),
+                            .unwrap_or_else(|_| panic!("Could not read file: {:?}", static_data)),
                     )
                     .unwrap();
 
@@ -465,5 +465,5 @@ struct SolarSystemStaticData {
 }
 
 fn clean_name(name: &str) -> String {
-    name.trim().replace("'", "''").replace("\"", "\"\"")
+    name.trim().replace('\'', "''").replace('\"', "\"\"")
 }

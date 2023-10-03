@@ -34,7 +34,7 @@ pub async fn update_history_for_region(
         .map_err(|e| UpdateError::MarketHistoryEsi(e, region_id))?
         .into_iter()
         .map(|i| i as usize)
-        .filter(|i| all_items.contains(&i)) // needs to be published
+        .filter(|i| all_items.contains(i)) // needs to be published
         .filter(|i| latest_histories.get(i).map(|s| *s < today).unwrap_or(true))
         .collect::<Vec<_>>();
 
@@ -103,12 +103,12 @@ pub async fn update_history_for_region(
 
 fn current_market_date() -> DateTime<Utc> {
     let today = Utc::now();
-    let today = if today.hour() < 11 {
+    
+    if today.hour() < 11 {
         Utc.with_ymd_and_hms(today.year(), today.month(), today.day() - 2, 11, 0, 0)
             .unwrap()
     } else {
         Utc.with_ymd_and_hms(today.year(), today.month(), today.day() - 1, 11, 0, 0)
             .unwrap()
-    };
-    today
+    }
 }

@@ -72,7 +72,7 @@ impl EsiClient {
             .get(path)
             .send()
             .await
-            .map_err(|e| EsiError::ConnectionError(e))?;
+            .map_err(EsiError::ConnectionError)?;
         drop(permit);
 
         if response.status().as_u16() == 420 {
@@ -93,7 +93,7 @@ impl EsiClient {
         let data = response
             .json::<D>()
             .await
-            .map_err(|e| EsiError::JsonError(e))?;
+            .map_err(EsiError::JsonError)?;
         Ok(data)
     }
 }

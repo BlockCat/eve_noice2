@@ -70,10 +70,8 @@ async fn main() -> std::io::Result<()> {
 }
 
 async fn load_sqlite() -> SqlitePool {
-    SqlitePoolOptions::new()
-        .connect("sqlite:database.db")
-        .await
-        .unwrap()
+    let sqlite_path = env!("DATABASE_URL", "sqlite:database.db");
+    SqlitePoolOptions::new().connect(sqlite_path).await.unwrap()
 }
 
 async fn start_actors(

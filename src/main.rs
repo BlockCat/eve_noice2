@@ -70,8 +70,12 @@ async fn main() -> std::io::Result<()> {
 }
 
 async fn load_sqlite() -> SqlitePool {
-    let sqlite_path = env!("DATABASE_URL", "sqlite:database.db");
-    SqlitePoolOptions::new().connect(sqlite_path).await.unwrap()
+    let sqlite_path = std::env::var("DATABASE_URL").unwrap_or("sqlite:database.db".to_string());
+    // let sqlite_path = env!("DATABASE_URL", "database.db");
+
+    log::info!("Reading sqlite path: {}", sqlite_path);
+
+    SqlitePoolOptions::new().connect(&sqlite_path).await.unwrap()
 }
 
 async fn start_actors(

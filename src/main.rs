@@ -96,7 +96,7 @@ async fn start_actors(
             item_repository.clone(),
         );
 
-        // history_actors.iter().for_each(|s| s.do_send(StartActor));
+        history_actors.iter().for_each(|s| s.do_send(StartActor));
         order_actors.iter().for_each(|s| s.do_send(StartActor));
 
         let history_scheduler = actors::UpdateScheduler::new(

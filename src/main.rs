@@ -63,6 +63,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(ir))
             .app_data(web::Data::new(mor))
             .app_data(web::Data::new(pool.clone()))
+            // .service(factory)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
@@ -119,7 +120,7 @@ struct SimpleLogger;
 
 impl log::Log for SimpleLogger {
     fn enabled(&self, metadata: &Metadata) -> bool {
-        metadata.level() <= Level::Debug && metadata.target().starts_with("noice2")
+        metadata.level() <= Level::Debug //&& metadata.target().starts_with("noice2")
         // true
     }
 

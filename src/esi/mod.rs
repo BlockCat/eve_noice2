@@ -43,7 +43,8 @@ impl EsiClient {
         let client = Client::builder()
             .user_agent(USER_AGENT)
             .gzip(true)
-            .connection_verbose(false)
+            .use_rustls_tls()
+            .connection_verbose(true)
             .pool_max_idle_per_host(permits)
             .build()
             .expect("Failed to create client");
@@ -52,7 +53,6 @@ impl EsiClient {
             client,
             semaphore: Arc::new(Semaphore::new(permits)),
         };
-
         unsafe {
             ESI_CLIENT = Some(client.clone());
         }

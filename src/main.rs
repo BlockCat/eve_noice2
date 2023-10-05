@@ -17,7 +17,6 @@ mod esi;
 mod eve_auth;
 mod repository;
 
-static LOGGER: SimpleLogger = SimpleLogger;
 pub struct ActixHandle(Arc<JoinHandle<()>>);
 
 impl Clone for ActixHandle {
@@ -34,9 +33,10 @@ impl ActixHandle {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    log::set_logger(&LOGGER)
-        .map(|()| log::set_max_level(LevelFilter::Debug))
-        .unwrap();
+    env_logger::builder()
+        .filter(Some("noice"), LevelFilter::Trace)
+        .filter(None, LevelFilter::Info)
+        .init();
 
     EsiClient::new(20);
 
@@ -63,7 +63,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(ir))
             .app_data(web::Data::new(mor))
             .app_data(web::Data::new(pool.clone()))
-            // .service(factory)
+        // .service(factory)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
@@ -76,7 +76,10 @@ async fn load_sqlite() -> SqlitePool {
 
     log::info!("Reading sqlite path: {}", sqlite_path);
 
-    SqlitePoolOptions::new().connect(&sqlite_path).await.unwrap()
+    SqlitePoolOptions::new()
+        .connect(&sqlite_path)
+        .await
+        .unwrap()
 }
 
 async fn start_actors(
@@ -114,26 +117,4 @@ async fn start_actors(
 
         (history_scheduler.start(), order_scheduler.start())
     })
-}
-
-struct SimpleLogger;
-
-impl log::Log for SimpleLogger {
-    fn enabled(&self, metadata: &Metadata) -> bool {
-        metadata.level() <= Level::Debug //&& metadata.target().starts_with("noice2")
-        // true
-    }
-
-    fn log(&self, record: &Record) {
-        if self.enabled(record.metadata()) {
-            println!(
-                "{} - {} - {}",
-                record.level(),
-                record.target(),
-                record.args()
-            );
-        }
-    }
-
-    fn flush(&self) {}
 }

@@ -25,11 +25,11 @@ impl MarketOrderRepository {
         items: Vec<MarketRegionOrdersItem>,
     ) -> Result<(), sqlx::Error> {
         let lock = self.0.lock().await;
-        let active_order_ids: String = items
-            .iter()
-            .map(|o| o.order_id.to_string())
-            .collect::<Vec<_>>()
-            .join(",");
+        // let active_order_ids: String = items
+        //     .iter()
+        //     .map(|o| o.order_id.to_string())
+        //     .collect::<Vec<_>>()
+        //     .join(",");
 
         for batch in items.chunks(CHUNK_SIZE) {
             let mut transaction = lock.begin().await?;
@@ -41,6 +41,7 @@ impl MarketOrderRepository {
                 let volume_remain = order.volume_remain as i64;
                 let volume_total = order.volume_total as i64;
                 let price = order.price as f32;
+
                 sqlx::query!("INSERT OR IGNORE INTO market_orders (buy_order, issued, expiry, order_id, item_id, system_id, volume_remain, volume_total, price) VALUES (?,?,?,?,?,?,?,?, ?)", 
                     order.is_buy_order, order.issued, expiry, order_id, type_id, system_id, volume_remain, volume_total, price).execute(transaction.as_mut()).await
                     .map_err(|e| {
@@ -51,16 +52,17 @@ impl MarketOrderRepository {
             transaction.commit().await?;
         }
 
-        let mut connection = lock.acquire().await?;
+        // let mut connection = lock.acquire().await?;
 
-        sqlx::query(&format!(
-            "UPDATE market_orders SET active = 0 WHERE active = 1 AND order_id NOT IN({})",
-            active_order_ids
-        ))
-        .execute(connection.as_mut())
-        .await?;
+        // log::warn!("Deactivating orders incorrectly, region_id is not being used");
+        // sqlx::query(&format!(
+        //     "UPDATE market_orders SET active = 0 WHERE active = 1 AND order_id NOT IN({})",
+        //     active_order_ids
+        // ))
+        // .execute(connection.as_mut())
+        // .await?;
 
-        drop(connection);
+        // drop(connection);
 
         Ok(())
     }

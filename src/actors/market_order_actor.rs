@@ -5,7 +5,6 @@ use crate::{
 };
 use actix::{Actor, Context, Handler};
 
-
 pub struct MarketOrderActor {
     pub region_id: usize,
     pub market_order_repository: MarketOrderRepository,
@@ -48,7 +47,7 @@ impl Handler<StartActor> for MarketOrderActor {
     type Result = ();
 
     fn handle(&mut self, _: StartActor, _ctx: &mut Self::Context) -> Self::Result {
-        log::info!("MarketOrderActor received StartActor message");
+        log::debug!("MarketOrderActor received StartActor message");
         if let Some(handle) = &self.handle {
             if !handle.is_finished() {
                 log::warn!(
@@ -58,7 +57,7 @@ impl Handler<StartActor> for MarketOrderActor {
                 return;
             }
         }
-        log::debug!("MarketOrderActor starting for region: {}", self.region_id);
+        log::info!("MarketOrderActor starting for region: {}", self.region_id);
         let region_id = self.region_id;
         let market_order_repository = self.market_order_repository.clone();
         let item_repository = self.item_repository.clone();
@@ -69,6 +68,9 @@ impl Handler<StartActor> for MarketOrderActor {
                 Err(e) => log::error!("MarketOrderActor failed for region: {}, {:?}", region_id, e),
             }
         });
+
+        log::debug!("MarketOrderActor completed region: {}", self.region_id);
+        
         self.handle = Some(handle);
     }
 }

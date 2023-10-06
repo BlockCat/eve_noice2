@@ -1,13 +1,11 @@
 use actix::{Actor, Addr};
-
 use actix_web::{web, App, HttpServer};
-use actors::{StartActor, UpdateScheduler};
+use actors::{MarketHistoryActor, MarketOrderActor, UpdateScheduler};
 use esi::EsiClient;
-
-use log::{Level, LevelFilter, Metadata, Record};
+use log::LevelFilter;
 use repository::{ItemRepository, MarketHistoryRepository, MarketOrderRepository};
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 use tokio::{sync::Mutex, task::JoinHandle};
 
 mod actions;
@@ -63,20 +61,27 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(ir))
             .app_data(web::Data::new(mor))
             .app_data(web::Data::new(pool.clone()))
+
         // .service(factory)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
-    .await
+    .await?;
+
+    _system.abort();
+
+    Ok(())
 }
 
 async fn load_sqlite() -> SqlitePool {
     let sqlite_path = std::env::var("DATABASE_URL").unwrap_or("sqlite:database.db".to_string());
-    // let sqlite_path = env!("DATABASE_URL", "database.db");
 
     log::info!("Reading sqlite path: {}", sqlite_path);
 
     SqlitePoolOptions::new()
+        .acquire_timeout(Duration::from_secs(30))
+        .idle_timeout(Some(Duration::from_secs(30)))
+        .max_lifetime(Some(Duration::from_secs(200)))
         .connect(&sqlite_path)
         .await
         .unwrap()
@@ -86,7 +91,7 @@ async fn start_actors(
     market_history_repository: MarketHistoryRepository,
     item_repository: ItemRepository,
     market_order_repository: MarketOrderRepository,
-) -> tokio::task::JoinHandle<(Addr<UpdateScheduler>, Addr<UpdateScheduler>)> {
+) -> tokio::task::JoinHandle<ActorHolder> {
     actix::spawn(async move {
         let history_actors = actors::load_market_history_actors(
             &[10000002, 10000043],
@@ -100,8 +105,8 @@ async fn start_actors(
             item_repository.clone(),
         );
 
-        history_actors.iter().for_each(|s| s.do_send(StartActor));
-        order_actors.iter().for_each(|s| s.do_send(StartActor));
+        // history_actors.iter().for_each(|s| s.do_send(StartActor));
+        // order_actors.iter().for_each(|s| s.do_send(StartActor));
 
         let history_scheduler = actors::UpdateScheduler::new(
             "0 0 12 * * * *".to_string(),
@@ -111,10 +116,30 @@ async fn start_actors(
                 .collect(),
         );
         let order_scheduler = actors::UpdateScheduler::new(
-            "0 */30 * * * * *".to_string(),
+            "0 */6 * * * * *".to_string(),
             order_actors.iter().map(|x| x.clone().recipient()).collect(),
         );
 
-        (history_scheduler.start(), order_scheduler.start())
+        let history_actors = MarketHistoryActors(history_actors);
+        let order_actors = MarketOrderActors(order_actors);
+
+        
+
+        ActorHolder {
+            _history_actors: history_actors,
+            _order_actors: order_actors,
+            _history_scheduler: history_scheduler.start(),
+            _order_scheduler: order_scheduler.start(),
+        }
     })
+}
+
+pub struct MarketHistoryActors(Vec<Addr<MarketHistoryActor>>);
+pub struct MarketOrderActors(Vec<Addr<MarketOrderActor>>);
+
+pub struct ActorHolder {
+    _history_actors: MarketHistoryActors,
+    _order_actors: MarketOrderActors,
+    _history_scheduler: Addr<UpdateScheduler>,
+    _order_scheduler: Addr<UpdateScheduler>,
 }

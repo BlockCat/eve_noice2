@@ -44,7 +44,7 @@ impl EsiClient {
             .user_agent(USER_AGENT)
             .gzip(true)
             .use_rustls_tls()
-            .connection_verbose(true)
+            .connection_verbose(false)
             .pool_max_idle_per_host(permits)
             .build()
             .expect("Failed to create client");
@@ -90,10 +90,7 @@ impl EsiClient {
 
     pub async fn get<D: DeserializeOwned>(&self, path: &str) -> Result<D, EsiError> {
         let response = self.get_response(path).await?;
-        let data = response
-            .json::<D>()
-            .await
-            .map_err(EsiError::JsonError)?;
+        let data = response.json::<D>().await.map_err(EsiError::JsonError)?;
         Ok(data)
     }
 }

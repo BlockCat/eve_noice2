@@ -1,7 +1,8 @@
-use self::{market_history_actor::MarketHistoryActor, market_order_actor::MarketOrderActor};
 use crate::repository::{ItemRepository, MarketHistoryRepository, MarketOrderRepository};
 use actix::{Actor, Addr, Message};
 
+pub use market_history_actor::MarketHistoryActor;
+pub use market_order_actor::MarketOrderActor;
 pub use update_scheduler::UpdateScheduler;
 
 mod market_history_actor;
@@ -25,7 +26,7 @@ pub fn load_market_history_actors(
                 market_history_repository.clone(),
                 item_repository.clone(),
             );
-            
+
             actor.start()
         })
         .collect()
@@ -44,7 +45,7 @@ pub fn load_market_order_actors(
                 market_order_repository.clone(),
                 item_repository.clone(),
             );
-            
+
             actor.start()
         })
         .collect()

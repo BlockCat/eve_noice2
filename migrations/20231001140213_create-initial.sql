@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS market_history (
     average_price INTEGER NOT NULL,
     order_count INTEGER NOT NULL,
     volume INTEGER NOT NULL,
+    created DATE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(date, item_id, region_id)
 );
 

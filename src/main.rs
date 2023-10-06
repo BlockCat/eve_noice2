@@ -78,13 +78,17 @@ async fn load_sqlite() -> SqlitePool {
 
     log::info!("Reading sqlite path: {}", sqlite_path);
 
-    SqlitePoolOptions::new()
+    let pool = SqlitePoolOptions::new()
         .acquire_timeout(Duration::from_secs(30))
         .idle_timeout(Some(Duration::from_secs(30)))
         .max_lifetime(Some(Duration::from_secs(200)))
         .connect(&sqlite_path)
         .await
-        .unwrap()
+        .unwrap();
+
+    sqlx::migrate!().run(&pool).await.unwrap();
+
+    pool
 }
 
 async fn start_actors(
@@ -122,8 +126,6 @@ async fn start_actors(
 
         let history_actors = MarketHistoryActors(history_actors);
         let order_actors = MarketOrderActors(order_actors);
-
-        
 
         ActorHolder {
             _history_actors: history_actors,

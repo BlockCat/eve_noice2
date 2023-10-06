@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS market_orders (
     active BOOLEAN NOT NULL DEFAULT TRUE,
     item_id INTEGER NOT NULL REFERENCES eve_items(id) ON DELETE CASCADE,
     system_id INTEGER NOT NULL REFERENCES eve_system(id) ON DELETE CASCADE,
+    created DATE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     volume_remain INTEGER NOT NULL,
     volume_total INTEGER NOT NULL,
     UNIQUE(order_id, issued, volume_remain)

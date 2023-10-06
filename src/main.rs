@@ -86,8 +86,6 @@ async fn load_sqlite() -> SqlitePool {
         .await
         .unwrap();
 
-    sqlx::migrate!().run(&pool).await.unwrap();
-
     pool
 }
 

@@ -1,1320 +1,170 @@
-<!DOCTYPE>
+<!DOCTYPE >
 <html lang="en">
-
-<head>
+  <head>
     <title>Noice2</title>
     <style>
-        .border-right {
-            border-right: 1px solid black;
-        }
+      .border-right {
+        border-right: 1px solid black;
+      }
 
-        .border-right-light {
-            border-right: 0.5px solid black;
-        }
+      .no-border {
+        border: 0;
+      }
 
-        table,
-        th,
-        td {
-            border-collapse: collapse;
-            padding: 2px 1em;
-        }
+      table,
+      th,
+      td {
+        border-collapse: collapse;
+        padding: 2px 1em;
+      }
 
-        .orange {
-            color: orange;
-        }
+      th,
+      td {
+        border-right: 0.5px solid black;
+      }
 
-        .green {
-            color: green;
-        }
+      .orange {
+        color: orange;
+      }
 
-        .red {
-            color: red;
-        }
+      .green {
+        color: green;
+      }
+
+      .red {
+        color: red;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <div class="container">
-        <h1>Noice2</h1>
-        <div style="border: 1px; border-color: black;  border-style: solid; padding: 1em;">
-            <h3>Filter settings</h3>
-            <form action="" method="get">
-                <div style="display: flex;">
-                    <div>
-                        <div>
-                            <label for="region">Region</label>
-                            <input type="text" name="region">
-                        </div>
+      <h1>Noice2</h1>
+      <div
+        style="
+          border: 1px;
+          border-color: black;
+          border-style: solid;
+          padding: 1em;
+        "
+      >
+        <h3>Filter settings</h3>
+        <form action="" method="get">
+          <div style="display: flex">
+            <div>
+              <div>
+                <label for="region">Region</label>
+                <input type="text" name="region" />
+              </div>
+              <div>
+                <label for="system">System</label>
+                <input type="text" name="system" />
+              </div>
+            </div>
+            <table>
+              <tbody>
+                <tr>
+                  <td>
+                    <input type="number" name="min_buy_price" />
+                  </td>
+                  <td>&lt buy price &lt</td>
+                  <td>
+                    <input type="number" name="max_buy_price" />
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="number" name="min_sell_price" />
+                  </td>
+                  <td>&lt sell price &lt</td>
+                  <td>
+                    <input type="number" name="max_sell_price" />
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="number" name="min_margin" />
+                  </td>
+                  <td>&lt margin &lt</td>
+                  <td>
+                    <input type="number" name="max_margin" />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-                    </div>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <input type="number" name="min_buy_price">
-                                </td>
-                                <td>
-                                    &lt buy price &lt
-                                </td>
-                                <td>
-                                    <input type="number" name="max_buy_price">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <input type="number" name="min_sell_price">
-                                </td>
-                                <td>
-                                    &lt sell price &lt
-                                </td>
-                                <td>
-                                    <input type="number" name="max_sell_price">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <input type="number" name="min_margin">
-                                </td>
-                                <td>
-                                    &lt margin &lt
-                                </td>
-                                <td>
-                                    <input type="number" name="max_margin">
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+          <input type="submit" value="filter" />
+        </form>
+      </div>
+      <table style="margin-top: 1em">
+        <caption>
+          Market information
+        </caption>
+        <thead>
+          <tr>
+            <th colspan="2" scope="colgroup" class="border-right"></th>
+            <th colspan="2" scope="colgroup" class="border-right">
+              Profit info
+            </th>
 
-                <input type="submit" value="filter">
-            </form>
-        </div>
-        <table style="margin-top: 1em;">
-            <caption>Market information</caption>
-            <thead>
-                <tr>
-                    <th colspan="2" scope="colgroup" class="border-right"></th>
-                    <th colspan="2" scope="colgroup" class="border-right">Profit info</th>
+            <th colspan="2" scope="colgroup" class="border-right">
+              Price info
+            </th>
+            <th colspan="4" scope="colgroup" class="border-right">
+              Avg 7d trade
+            </th>
 
-                    <th colspan="2" scope="colgroup" class="border-right">Price info</th>
-                    <th colspan="4" scope="colgroup" class="border-right">Avg 7d trade</th>
+            <th colspan="4" scope="colgroup" class="border-right">
+              Competition
+            </th>
 
-                    <th colspan="4" scope="colgroup" class="border-right">Competition</th>
+            <th colspan="2" scope="colgroup" class="border-right">Entropy</th>
+          </tr>
+          <tr>
+            <th scope="col" class="no-border">Commodity</th>
+            <th scope="col" class="border-right"></th>
+            <th scope="col" class="border-right-light">Spread</th>
+            <th scope="col" class="border-right">Margin</th>
+            <th scope="col" class="border-right-light">Buy</th>
+            <th scope="col" class="border-right">Sell</th>
+            <th scope="col" class="border-right-light">Trades</th>
+            <th scope="col" class="border-right">Isk</th>
+            <th scope="col" class="border-right-light">Buy</th>
+            <th scope="col" class="border-right">Sell</th>
+            <th scope="col" class="border-right-light">3h buy</th>
+            <th scope="col" class="border-right-light">24h buy</th>
+            <th scope="col" class="border-right-light">3h sell</th>
+            <th scope="col" class="border-right">24h sell</th>
+            <th scope="col" class="border-right-light">7d</th>
+            <th scope="col" class="border-right">30d</th>
 
-                    <th colspan="2" scope="colgroup" class="border-right">Entropy</th>
-                </tr>
-                <tr>
-                    <th>Commodity</th>
-                    <th scope="col" class="border-right"></th>
-                    <th scope="col" class="border-right-light">Spread</th>
-                    <th scope="col" class="border-right">Margin</th>
-                    <th scope="col" class="border-right-light">Buy</th>
-                    <th scope="col" class="border-right">Sell </th>
-                    <th scope="col" class="border-right-light">Trades</th>
-                    <th scope="col" class="border-right">Isk</th>
-                    <th scope="col" class="border-right-light">Buy</th>
-                    <th scope="col" class="border-right">Sell</th>
-                    <th scope="col" class="border-right-light">3h buy</th>
-                    <th scope="col" class="border-right-light">24h buy</th>
-                    <th scope="col" class="border-right-light">3h sell</th>
-                    <th scope="col" class="border-right">24h sell</th>
-                    <th scope="col" class="border-right-light">7d</th>
-                    <th scope="col" class="border-right">30d</th>
+            <th scope="col">Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="no-border">Gila</td>
+            <td class="border-right"></td>
+            <td class="orange">231,231</td>
+            <td class="border-right red">2%</td>
+            <td>231,000,000</td>
+            <td class="border-right">232,000,000</td>
+            <td>213</td>
+            <td>500,000,000,000</td>
+            <td class="green">-3.4%</td>
+            <td class="red border-right">4.5%</td>
+            <td class="orange">5</td>
+            <td class="red">12</td>
+            <td class="green">1</td>
+            <td class="red border-right">10</td>
+            <td class="green">10</td>
+            <td class="green border-right">8</td>
 
-                    <th scope="col">Score</th>
-
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Gila</td>
-                    <td></td>
-                    <td class="orange">231,231</td>
-                    <td class="red">2%</td>
-                    <td>231,000,000</td>
-                    <td>232,000,000</td>
-                    <td>213</td>
-                    <td>500,000,000,000</td>
-                    <td class="green">-3.4%</td>
-                    <td class="red">4.5%</td>
-                    <td class="orange">5</td>
-                    <td class="red">12</td>
-                    <td class="green">1</td>
-                    <td class="red">10</td>
-                    <td class="green">10</td>
-                    <td class="green">8</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-            </tbody>
-        </table>
+            <td class="red">0,0</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-</body>
-
+  </body>
 </html>

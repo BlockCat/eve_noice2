@@ -28,7 +28,7 @@ pub async fn update_order_for_region(
     log::debug!("Region: {}, orders: {}", region_id, orders.len());
 
     market_order_repository
-        .insert_active_items(orders)
+        .insert_active_items(orders, region_id)
         .await
         .map_err(|e| UpdateError::UpdateOrderSql(e, region_id))?;
 

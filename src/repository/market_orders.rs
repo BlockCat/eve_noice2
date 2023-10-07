@@ -23,13 +23,14 @@ impl MarketOrderRepository {
     pub async fn insert_active_items(
         &mut self,
         items: Vec<MarketRegionOrdersItem>,
+        region_id: usize,
     ) -> Result<(), sqlx::Error> {
         let lock = self.0.lock().await;
-        // let active_order_ids: String = items
-        //     .iter()
-        //     .map(|o| o.order_id.to_string())
-        //     .collect::<Vec<_>>()
-        //     .join(",");
+        let active_order_ids: String = items
+            .iter()
+            .map(|o| o.order_id.to_string())
+            .collect::<Vec<_>>()
+            .join(",");
 
         for batch in items.chunks(CHUNK_SIZE) {
             let mut transaction = lock.begin().await?;
@@ -52,17 +53,16 @@ impl MarketOrderRepository {
             transaction.commit().await?;
         }
 
-        // let mut connection = lock.acquire().await?;
+        let mut connection = lock.acquire().await?;
 
-        // log::warn!("Deactivating orders incorrectly, region_id is not being used");
-        // sqlx::query(&format!(
-        //     "UPDATE market_orders SET active = 0 WHERE active = 1 AND order_id NOT IN({})",
-        //     active_order_ids
-        // ))
-        // .execute(connection.as_mut())
-        // .await?;
+        sqlx::query(&format!(
+            "UPDATE market_orders SET active = 0 WHERE active = 1 AND order_id NOT IN({}) AND system_id IN (SELECT id FROM eve_system WHERE region_id = {})",
+            active_order_ids, region_id
+        ))        
+        .execute(connection.as_mut())
+        .await?;
 
-        // drop(connection);
+        drop(connection);
 
         Ok(())
     }

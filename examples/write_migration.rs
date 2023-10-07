@@ -1,11 +1,22 @@
 use chrono::{Datelike, Timelike};
+use futures::TryStreamExt;
 use serde::Deserialize;
 use sqlx::{Pool, Sqlite};
 use std::{
     collections::{HashMap, HashSet},
+    fmt::Display,
     fs::File,
     path::Path,
 };
+
+struct SDE {
+    market_groups: HashMap<usize, EveMarketGroup>,
+    groups: HashMap<usize, EveGroup>,
+    types: HashMap<TypeId, EveType>,
+    regions: HashMap<RegionId, String>,
+    // systems: HashMap<SystemId, (String, usize, Vec<usize>)>,
+    systems: HashMap<SystemId, SdeSystem>,
+}
 
 fn main() {
     tokio::runtime::Builder::new_current_thread()
@@ -44,6 +55,9 @@ async fn start() {
     migration.push_str(&create_system_migrations(&sqlx, &sde).await);
     migration.push('\n');
 
+    migration.push_str(&create_stargates_migrations(&sde).await);
+    migration.push('\n');
+
     migration.push_str(&create_group_migrations(&sqlx, &sde).await);
     migration.push('\n');
 
@@ -59,12 +73,11 @@ async fn start() {
 async fn create_region_migrations(pool: &Pool<Sqlite>, sde: &SDE) -> String {
     let mut migration = String::new();
     let existing_regions = sqlx::query!("SELECT id FROM eve_region")
-        .fetch_all(pool)
+        .map(|s| RegionId(s.id as usize))
+        .fetch(pool)
+        .try_collect::<HashSet<_>>()
         .await
-        .unwrap()
-        .into_iter()
-        .map(|s| s.id as usize)
-        .collect::<HashSet<_>>();
+        .unwrap();
 
     let mut deleted_regions = existing_regions
         .difference(&sde.regions.keys().copied().collect::<HashSet<_>>())
@@ -88,14 +101,46 @@ async fn create_region_migrations(pool: &Pool<Sqlite>, sde: &SDE) -> String {
         let region_id = *region.0;
         let region_name = region.1;
 
-        migration.push_str(
-            &format!(
-                "INSERT OR REPLACE INTO eve_region (id, name) VALUES ({}, '{}');\n",
-                region_id,
-                clean_name(region_name)
-            )
-            .to_string(),
-        );
+        if !existing_regions.contains(&region_id) {
+            migration.push_str(
+                &format!(
+                    "INSERT OR REPLACE INTO eve_region (id, name) VALUES ({}, '{}');\n",
+                    region_id,
+                    clean_name(region_name)
+                )
+                .to_string(),
+            );
+        }
+    }
+
+    migration
+}
+
+async fn create_stargates_migrations(sde: &SDE) -> String {
+    let mut migration = String::new();
+
+    let stargate_system = sde
+        .systems
+        .iter()
+        .flat_map(|(system_id, sde_system)| {
+            sde_system.stargates.iter().map(move |b| (b.0, *system_id))
+        })
+        .collect::<HashMap<_, _>>();
+
+    for system in sde.systems.iter() {
+        let source_system_id = *system.0;
+
+        let system_static_data = &system.1.stargates;
+
+        for dest_stargate in system_static_data {
+            migration.push_str(
+                &format!(
+                    "INSERT OR REPLACE INTO eve_stargates (source_system_id, target_system_id) VALUES ({}, {});\n",
+                    source_system_id, stargate_system[&dest_stargate.1]
+                )
+                .to_string(),
+            );
+        }
     }
 
     migration
@@ -104,12 +149,11 @@ async fn create_region_migrations(pool: &Pool<Sqlite>, sde: &SDE) -> String {
 async fn create_system_migrations(pool: &Pool<Sqlite>, sde: &SDE) -> String {
     let mut migration = String::new();
     let existing_systems = sqlx::query!("SELECT id FROM eve_system")
-        .fetch_all(pool)
+        .map(|s| SystemId(s.id as usize))
+        .fetch(pool)
+        .try_collect::<HashSet<_>>()
         .await
-        .unwrap()
-        .into_iter()
-        .map(|s| s.id as usize)
-        .collect::<HashSet<_>>();
+        .unwrap();
 
     let mut deleted_systems = existing_systems
         .difference(&sde.systems.keys().copied().collect::<HashSet<_>>())
@@ -131,18 +175,9 @@ async fn create_system_migrations(pool: &Pool<Sqlite>, sde: &SDE) -> String {
 
     for system in sde.systems.iter() {
         let system_id = *system.0;
-        let system_name = system.1 .0.clone();
-        let region_id = system.1 .1;
-
-        migration.push_str(
-            &format!(
-                "INSERT OR REPLACE INTO eve_system (id, name, region_id) VALUES ({}, '{}', {});\n",
-                system_id,
-                clean_name(&system_name),
-                region_id
-            )
-            .to_string(),
-        );
+        if !existing_systems.contains(&system_id) {
+            migration.push_str(&system.1.to_sql());
+        }
     }
 
     migration
@@ -151,12 +186,11 @@ async fn create_system_migrations(pool: &Pool<Sqlite>, sde: &SDE) -> String {
 async fn create_group_migrations(pool: &Pool<Sqlite>, sde: &SDE) -> String {
     let mut migration = String::new();
     let existing_groups = sqlx::query!("SELECT id FROM eve_groups")
-        .fetch_all(pool)
-        .await
-        .unwrap()
-        .into_iter()
         .map(|s| s.id as usize)
-        .collect::<HashSet<_>>();
+        .fetch(pool)
+        .try_collect::<HashSet<_>>()
+        .await
+        .unwrap();
 
     let mut deleted_groups = existing_groups
         .difference(&sde.groups.keys().copied().collect::<HashSet<_>>())
@@ -180,14 +214,16 @@ async fn create_group_migrations(pool: &Pool<Sqlite>, sde: &SDE) -> String {
         let group_id = *group.0;
         let group_name = &group.1.name.en;
 
-        migration.push_str(
-            &format!(
-                "INSERT OR REPLACE INTO eve_groups (id, name) VALUES ({}, '{}');\n",
-                group_id,
-                clean_name(group_name)
-            )
-            .to_string(),
-        );
+        if !existing_groups.contains(&group_id) {
+            migration.push_str(
+                &format!(
+                    "INSERT OR REPLACE INTO eve_groups (id, name) VALUES ({}, '{}');\n",
+                    group_id,
+                    clean_name(group_name)
+                )
+                .to_string(),
+            );
+        }
     }
 
     migration
@@ -196,12 +232,11 @@ async fn create_group_migrations(pool: &Pool<Sqlite>, sde: &SDE) -> String {
 async fn create_market_group_migrations(pool: &Pool<Sqlite>, sde: &SDE) -> String {
     let mut migration = String::new();
     let existing_market_groups = sqlx::query!("SELECT id FROM eve_market_groups")
-        .fetch_all(pool)
-        .await
-        .unwrap()
-        .into_iter()
         .map(|s| s.id as usize)
-        .collect::<HashSet<_>>();
+        .fetch(pool)
+        .try_collect::<HashSet<_>>()
+        .await
+        .unwrap();
 
     let mut deleted_market_groups = existing_market_groups
         .difference(&sde.market_groups.keys().copied().collect::<HashSet<_>>())
@@ -225,14 +260,16 @@ async fn create_market_group_migrations(pool: &Pool<Sqlite>, sde: &SDE) -> Strin
         let market_group_id = *market_group.0;
         let market_group_name = &market_group.1.name.en;
 
-        migration.push_str(
-            &format!(
-                "INSERT OR REPLACE INTO eve_market_groups (id, name) VALUES ({}, '{}');\n",
-                market_group_id,
-                clean_name(market_group_name)
-            )
-            .to_string(),
-        );
+        if !existing_market_groups.contains(&market_group_id) {
+            migration.push_str(
+                &format!(
+                    "INSERT OR REPLACE INTO eve_market_groups (id, name) VALUES ({}, '{}');\n",
+                    market_group_id,
+                    clean_name(market_group_name)
+                )
+                .to_string(),
+            );
+        }
     }
 
     migration
@@ -241,12 +278,11 @@ async fn create_market_group_migrations(pool: &Pool<Sqlite>, sde: &SDE) -> Strin
 async fn create_type_migrations(pool: &Pool<Sqlite>, sde: &SDE) -> String {
     let mut migration = String::new();
     let existing_types = sqlx::query!("SELECT id FROM eve_items")
-        .fetch_all(pool)
+        .map(|s| TypeId(s.id as usize))
+        .fetch(pool)
+        .try_collect::<HashSet<_>>()
         .await
-        .unwrap()
-        .into_iter()
-        .map(|s| s.id as usize)
-        .collect::<HashSet<_>>();
+        .unwrap();
 
     let mut deleted_types = existing_types
         .difference(&sde.types.keys().copied().collect::<HashSet<_>>())
@@ -282,22 +318,17 @@ async fn create_type_migrations(pool: &Pool<Sqlite>, sde: &SDE) -> String {
             }
         }
 
-        migration.push_str(
+        if !existing_types.contains(&type_id) {
+            migration.push_str(
             &format!(
                 "INSERT OR REPLACE INTO eve_items (id, name, group_id, market_group_id, published) VALUES ({}, '{}', {}, {}, {});\n",
                 type_id, clean_name(type_name), group_id, market_group_id.map(|x| x.to_string()).unwrap_or("NULL".to_string()), type_.1.published as i32
             )
             .to_string(),
         );
+        }
     }
     migration
-}
-struct SDE {
-    market_groups: HashMap<usize, EveMarketGroup>,
-    groups: HashMap<usize, EveGroup>,
-    types: HashMap<usize, EveType>,
-    regions: HashMap<usize, String>,
-    systems: HashMap<usize, (String, usize)>,
 }
 
 fn read_sde(path: &str) -> SDE {
@@ -327,8 +358,8 @@ fn read_sde(path: &str) -> SDE {
     }
 }
 
-fn load_types(path: &Path) -> HashMap<usize, EveType> {
-    serde_yaml::from_reader::<_, HashMap<usize, EveType>>(
+fn load_types(path: &Path) -> HashMap<TypeId, EveType> {
+    serde_yaml::from_reader::<_, HashMap<TypeId, EveType>>(
         File::open(path.join("fsd/typeIDs.yaml")).unwrap(),
     )
     .unwrap()
@@ -353,7 +384,7 @@ fn load_market_groups(path: &Path) -> HashMap<usize, EveMarketGroup> {
     .unwrap()
 }
 
-fn load_regions(path: &Path) -> (HashMap<usize, String>, HashMap<usize, (String, usize)>) {
+fn load_regions(path: &Path) -> (HashMap<RegionId, String>, HashMap<SystemId, SdeSystem>) {
     let folder = path.join("fsd/universe/eve");
     let regions = std::fs::read_dir(folder).expect("Could not read folder: fsd/universe/eve");
 
@@ -378,7 +409,7 @@ fn load_regions(path: &Path) -> (HashMap<usize, String>, HashMap<usize, (String,
 
         region_map.insert(
             region_static_data.region_id,
-            inv_names[&region_static_data.region_id].clone(),
+            inv_names[&region_static_data.region_id.0].clone(),
         );
         let constellations = std::fs::read_dir(&region.path()).unwrap();
         for constellation in constellations {
@@ -399,10 +430,18 @@ fn load_regions(path: &Path) -> (HashMap<usize, String>, HashMap<usize, (String,
 
                     system_map.insert(
                         static_data.solar_system_id,
-                        (
-                            inv_names[&static_data.solar_system_id].clone(),
-                            region_static_data.region_id,
-                        ),
+                        SdeSystem {
+                            id: static_data.solar_system_id,
+                            name: inv_names[&static_data.solar_system_id.0].clone(),
+                            region_id: region_static_data.region_id,
+                            stargates: static_data
+                                .stargates
+                                .iter()
+                                .map(|(gate_id, static_data)| {
+                                    (*gate_id, static_data.destination_gate)
+                                })
+                                .collect(),
+                        },
                     );
                 }
             }
@@ -434,14 +473,14 @@ struct EveType {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct EveGroup {
-    name: Translation
+    name: Translation,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct EveMarketGroup {
     #[serde(rename = "nameID")]
-    name: Translation
+    name: Translation,
 }
 
 #[derive(Debug, Deserialize)]
@@ -454,16 +493,83 @@ struct Translation {
 #[serde(rename_all = "camelCase")]
 struct RegionStaticData {
     #[serde(rename = "regionID")]
-    region_id: usize,
+    region_id: RegionId,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct SolarSystemStaticData {
     #[serde(rename = "solarSystemID")]
-    solar_system_id: usize,
+    solar_system_id: SystemId,
+    stargates: HashMap<usize, SolarSystemStaticGateData>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SolarSystemStaticGateData {
+    #[serde(rename = "destination")]
+    destination_gate: usize,
 }
 
 fn clean_name(name: &str) -> String {
     name.trim().replace('\'', "''").replace('\"', "\"\"")
+}
+
+#[derive(Debug, sqlx::FromRow, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Deserialize)]
+struct SystemId(usize);
+
+impl Display for SystemId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{}", self.0))
+    }
+}
+
+#[derive(Debug, sqlx::FromRow, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Deserialize)]
+struct RegionId(usize);
+
+impl Display for RegionId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{}", self.0))
+    }
+}
+
+#[derive(Debug, sqlx::FromRow, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Deserialize)]
+struct TypeId(usize);
+
+impl Display for TypeId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{}", self.0))
+    }
+}
+
+struct SdeSystem {
+    id: SystemId,
+    name: String,
+    region_id: RegionId,
+    stargates: Vec<(usize, usize)>, // source stargate id, target stargate id
+}
+
+impl SdeSystem {
+    fn new(
+        id: SystemId,
+        name: String,
+        region_id: RegionId,
+        stargates: Vec<(usize, usize)>,
+    ) -> Self {
+        Self {
+            id,
+            name,
+            region_id,
+            stargates,
+        }
+    }
+
+    fn to_sql(&self) -> String {
+        format!(
+            "INSERT OR REPLACE INTO eve_system (id, name, region_id) VALUES ({}, '{}', {});",
+            self.id,
+            clean_name(&self.name),
+            self.region_id
+        )
+    }
 }

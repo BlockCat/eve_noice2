@@ -2,7 +2,7 @@ use chrono::{DateTime, Datelike, NaiveTime, TimeZone, Timelike, Utc};
 use futures::future::try_join_all;
 
 use crate::{
-    esi::{get_market_history, get_market_region_types, EsiClient},
+    esi::{errors::EsiError, get_market_history, get_market_region_types, EsiClient},
     repository::{ItemRepository, MarketHistoryRepository},
 };
 
@@ -88,13 +88,18 @@ pub async fn update_history_for_region(
                     chunk_len
                 );
             }
-            Err(e) => log::info!(
-                "Failed collecting history for region: {}, chunk({}/{}), {:?}",
-                region_id,
-                chunk,
-                chunk_len,
-                e
-            ),
+            Err(e) => {
+                log::info!(
+                    "Failed collecting history for region: {}, chunk({}/{}), {:?}",
+                    region_id,
+                    chunk,
+                    chunk_len,
+                    e
+                );
+                if let EsiError::ErrorLimited = e {
+                    return Err(UpdateError::MarketHistoryEsi(e, 0));
+                }
+            }
         }
     }
 
@@ -103,7 +108,7 @@ pub async fn update_history_for_region(
 
 fn current_market_date() -> DateTime<Utc> {
     let today = Utc::now();
-    
+
     if today.hour() < 11 {
         Utc.with_ymd_and_hms(today.year(), today.month(), today.day() - 2, 11, 0, 0)
             .unwrap()

@@ -78,15 +78,15 @@ async fn load_sqlite() -> SqlitePool {
 
     log::info!("Reading sqlite path: {}", sqlite_path);
 
-    let pool = SqlitePoolOptions::new()
+    
+
+    SqlitePoolOptions::new()
         .acquire_timeout(Duration::from_secs(30))
         .idle_timeout(Some(Duration::from_secs(30)))
         .max_lifetime(Some(Duration::from_secs(200)))
         .connect(&sqlite_path)
         .await
-        .unwrap();
-
-    pool
+        .unwrap()
 }
 
 async fn start_actors(

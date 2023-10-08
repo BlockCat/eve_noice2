@@ -37,7 +37,7 @@ impl MarketHistoryRepository {
             let date = Utc.from_utc_datetime(&date.and_hms_opt(11, 0, 0).unwrap());
 
             (item_id as usize, date)
-        })
+        })        
         .fetch(connection.as_mut())
         .try_collect::<HashMap<_, _>>()        
         .await?;
@@ -62,9 +62,12 @@ impl MarketHistoryRepository {
         for (item_id, history) in added {
             let item_id = item_id as i64;
             let region_id = region_id as i64;
+
             sqlx::query!("INSERT OR REPLACE INTO market_history (date, item_id, region_id, low_price, high_price, average_price, order_count, volume) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            history.date, item_id, region_id, history.lowest, history.highest, history.average, history.order_count, history.volume
-        ).execute(transaction.as_mut()).await.map_err(|e| {
+            history.date, item_id, region_id, history.lowest, history.highest, history.average, history.order_count, history.volume)
+            .execute(transaction.as_mut())
+            .await
+            .map_err(|e| {
             log::error!("Failed to insert history: {:?}. tid: {}, rid: {}", e, item_id, region_id);
             e
         })?;

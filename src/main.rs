@@ -111,7 +111,7 @@ async fn start_actors(
         // order_actors.iter().for_each(|s| s.do_send(StartActor));
 
         let history_scheduler = actors::UpdateScheduler::new(
-            "0 0 12 * * * *".to_string(),
+            "0 23 11 * * * *".to_string(),
             history_actors
                 .iter()
                 .map(|x| x.clone().recipient())

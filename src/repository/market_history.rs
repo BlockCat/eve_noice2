@@ -1,6 +1,6 @@
 use chrono::{DateTime, NaiveDate, TimeZone, Utc};
 use futures::TryStreamExt;
-use sqlx::{sqlite::SqliteRow, Connection, Row, SqlitePool};
+use sqlx::{sqlite::{SqliteRow}, Connection, Row, SqlitePool};
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
 
@@ -57,13 +57,15 @@ impl MarketHistoryRepository {
     ) -> Result<(), sqlx::Error> {
         let lock = self.0.lock().await;
         let mut connection = lock.acquire().await?;
+
         let mut transaction = connection.begin().await?;
 
         for (item_id, history) in added {
             let item_id = item_id as i64;
             let region_id = region_id as i64;
+            
 
-            sqlx::query!("INSERT OR REPLACE INTO market_history (date, item_id, region_id, low_price, high_price, average_price, order_count, volume) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
+             sqlx::query!("INSERT OR REPLACE INTO market_history (date, item_id, region_id, low_price, high_price, average_price, order_count, volume) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
             history.date, item_id, region_id, history.lowest, history.highest, history.average, history.order_count, history.volume)
             .execute(transaction.as_mut())
             .await
@@ -71,6 +73,7 @@ impl MarketHistoryRepository {
             log::error!("Failed to insert history: {:?}. tid: {}, rid: {}", e, item_id, region_id);
             e
         })?;
+
         }
         transaction.commit().await?;
 

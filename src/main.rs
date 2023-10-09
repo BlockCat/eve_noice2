@@ -1,6 +1,6 @@
 use actix::{Actor, Addr};
 use actix_web::{web, App, HttpServer};
-use actors::{MarketHistoryActor, MarketOrderActor, UpdateScheduler};
+use actors::{MarketHistoryActor, MarketOrderActor, StartActor, UpdateScheduler};
 use esi::EsiClient;
 use log::LevelFilter;
 use repository::{ItemRepository, MarketHistoryRepository, MarketOrderRepository};
@@ -10,10 +10,12 @@ use tokio::{sync::Mutex, task::JoinHandle};
 
 mod actions;
 mod actors;
+mod cache;
 mod config;
 mod esi;
 mod eve_auth;
 mod repository;
+mod routes;
 
 pub struct ActixHandle(Arc<JoinHandle<()>>);
 
@@ -61,6 +63,8 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(ir))
             .app_data(web::Data::new(mor))
             .app_data(web::Data::new(pool.clone()))
+            // .app_data(web::Data::new(system.clone()))
+            // .service(routes::margin_table)
 
         // .service(factory)
     })
@@ -68,7 +72,7 @@ async fn main() -> std::io::Result<()> {
     .run()
     .await?;
 
-    _system.abort();
+    // _system.abort();
 
     Ok(())
 }
@@ -77,8 +81,6 @@ async fn load_sqlite() -> SqlitePool {
     let sqlite_path = std::env::var("DATABASE_URL").unwrap_or("sqlite:database.db".to_string());
 
     log::info!("Reading sqlite path: {}", sqlite_path);
-
-    
 
     SqlitePoolOptions::new()
         .acquire_timeout(Duration::from_secs(30))
@@ -107,7 +109,7 @@ async fn start_actors(
             item_repository.clone(),
         );
 
-        // history_actors.iter().for_each(|s| s.do_send(StartActor));
+        history_actors.iter().for_each(|s| s.do_send(StartActor));
         // order_actors.iter().for_each(|s| s.do_send(StartActor));
 
         let history_scheduler = actors::UpdateScheduler::new(
@@ -134,9 +136,13 @@ async fn start_actors(
     })
 }
 
+#[derive(Debug, Clone)]
 pub struct MarketHistoryActors(Vec<Addr<MarketHistoryActor>>);
+
+#[derive(Debug, Clone)]
 pub struct MarketOrderActors(Vec<Addr<MarketOrderActor>>);
 
+#[derive(Debug, Clone)]
 pub struct ActorHolder {
     _history_actors: MarketHistoryActors,
     _order_actors: MarketOrderActors,

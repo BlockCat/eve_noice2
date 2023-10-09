@@ -1,9 +1,10 @@
 use chrono::{DateTime, NaiveDate, TimeZone, Utc};
 use futures::TryStreamExt;
-use sqlx::{sqlite::{SqliteRow}, Connection, Row, SqlitePool};
+use sqlx::{sqlite::SqliteRow, Connection, Row, SqlitePool};
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
 
+#[derive(Debug)]
 pub struct MarketHistoryRepository(Arc<Mutex<SqlitePool>>);
 
 impl MarketHistoryRepository {
@@ -18,7 +19,28 @@ impl Clone for MarketHistoryRepository {
     }
 }
 
+#[derive(sqlx::FromRow)]
+pub struct MarketHistoryAverage {    
+    pub item_id: i64,
+    pub avg_price: f64,
+    pub avg_volume: f64,
+    pub avg_low: f64,
+    pub avg_high: f64,
+}
+
 impl MarketHistoryRepository {
+
+    pub async fn averages(&self) -> Result<HashMap<usize, MarketHistoryAverage>, sqlx::Error> {
+        let lock = self.0.lock().await;
+        let mut connection = lock.acquire().await?;
+
+        sqlx::query_as!(MarketHistoryAverage, r#"SELECT item_id, AVG(average_price) as avg_price, AVG(volume) as avg_volume, AVG(low_price) as avg_low, AVG(high_price) as avg_high FROM market_history WHERE datetime(date) >= datetime('now', '-31 Days') GROUP BY item_id"#)
+        .map(|row| {
+            (row.item_id as usize, row)
+        })
+        .fetch(connection.as_mut())
+        .try_collect::<HashMap<_,_>>().await
+    }
     pub async fn latest_histories(
         &mut self,
         region_id: usize,

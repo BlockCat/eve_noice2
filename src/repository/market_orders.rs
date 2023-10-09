@@ -1,10 +1,14 @@
 use crate::esi::models::MarketRegionOrdersItem;
+use chrono::format;
+use futures::TryStreamExt;
 use sqlx::SqlitePool;
-use std::sync::Arc;
+use std::{sync::Arc, collections::HashMap, borrow::BorrowMut};
 use tokio::sync::Mutex;
 
 const CHUNK_SIZE: usize = 1000;
 
+
+#[derive(Debug)]
 pub struct MarketOrderRepository(Arc<Mutex<SqlitePool>>);
 
 impl MarketOrderRepository {
@@ -65,5 +69,130 @@ impl MarketOrderRepository {
         drop(connection);
 
         Ok(())
+    }
+
+    pub async fn region_sell_prices(&self, region_id: usize) -> Result<HashMap<usize, f64>, sqlx::Error> {
+        let lock = self.0.lock().await;
+        let mut connection = lock.acquire().await?;
+        let region_id = region_id as i64;
+        sqlx::query!(
+            r#"SELECT item_id, MIN(price) as "sell_price! : f64" FROM market_orders WHERE system_id IN (select id from eve_system where region_id = ?) AND buy_order = 0 AND active = 1 GROUP BY item_id HAVING COUNT(price) > 0"#,
+            region_id
+        )
+        .map(|row| {
+            let item_id = row.item_id as usize;
+            let price: f64 = row.sell_price;
+    
+            (item_id, price)
+        })
+        .fetch(connection.as_mut())
+        .try_collect::<HashMap<_,_>>().await
+    }
+
+    
+    pub async fn region_buy_prices(&self, region_id: usize) -> Result<HashMap<usize, f64>, sqlx::Error> {
+        let lock = self.0.lock().await;
+        let mut connection = lock.acquire().await?;
+        let region_id = region_id as i64;
+        sqlx::query!(
+            r#"SELECT item_id, MAX(price) as "buy_price! : f64" FROM market_orders WHERE system_id IN (select id from eve_system where region_id = ?) AND buy_order = 1 AND active = 1 GROUP BY item_id HAVING COUNT(price) > 0"#,
+            region_id
+        )
+        .map(|row| {
+            let item_id = row.item_id as usize;
+            let price: f64 = row.buy_price;
+    
+            (item_id, price)
+        })
+        .fetch(connection.as_mut())
+        .try_collect::<HashMap<_,_>>().await
+    }
+
+    pub async fn region_buy_competition(&self, region_id: usize, last_hours: usize) -> Result<HashMap<usize, usize>, sqlx::Error> {
+        let lock = self.0.lock().await;
+        let mut connection = lock.acquire().await?;
+        let region_id = region_id as i64;
+        let past_hours = format!("-{} hours", last_hours);
+        sqlx::query!(
+            r#"SELECT item_id, count(1) as "competition! : i64" FROM market_orders 
+            WHERE system_id IN (select id from eve_system where region_id = ?) AND buy_order = 1 AND datetime(issued) > datetime('now', ?)
+            GROUP BY item_id"#,
+            region_id, past_hours
+        )
+        .map(|row| {
+            let item_id = row.item_id as usize;
+            let price = row.competition as usize;
+    
+            (item_id, price)
+        })
+        .fetch(connection.as_mut())
+        .try_collect::<HashMap<_,_>>().await
+    }
+
+    pub async fn region_sell_competition(&self, region_id: usize, last_hours: usize) -> Result<HashMap<usize, usize>, sqlx::Error> {
+        let lock = self.0.lock().await;
+        let mut connection = lock.acquire().await?;
+        let region_id = region_id as i64;
+        let past_hours = format!("-{} hours", last_hours);
+        sqlx::query!(
+            r#"SELECT item_id, count(1) as "competition! : i64" FROM market_orders 
+            WHERE system_id IN (select id from eve_system where region_id = ?) AND buy_order = 0 AND datetime(issued) > datetime('now', ?)
+            GROUP BY item_id"#,
+            region_id, past_hours
+        )
+        .map(|row| {
+            let item_id = row.item_id as usize;
+            let price = row.competition as usize;
+    
+            (item_id, price)
+        })
+        .fetch(connection.as_mut())
+        .try_collect::<HashMap<_,_>>().await
+    }
+
+    pub async fn region_confirmed_buy_volume(&self, region_id: usize, last_hours: usize) -> Result<HashMap<usize, Vec<(f64, usize)>>, sqlx::Error> {
+        let lock = self.0.lock().await;
+        let mut connection = lock.acquire().await?;        
+        let region_id = region_id as i64;
+        let last_hours = format!("-{} hours", last_hours);
+        let items = sqlx::query!(r#"SELECT order_id, item_id, price, MAX(volume_remain) - MIN(volume_remain) as "fulfilled! : i64" FROM market_orders WHERE system_id IN (select id from eve_system where region_id = ?) AND buy_order=1 AND datetime(created) > datetime('now', ?) GROUP BY order_id, price"#, region_id, last_hours)
+        .map(|row| {
+            let item_id = row.item_id as usize;
+            let price = row.price;
+            let volume = row.fulfilled as usize;
+            
+            (item_id, price, volume)
+        })
+        .fetch_all(connection.as_mut()).await?;
+
+        let mut map: HashMap<usize, Vec<(f64, usize)>> = HashMap::new();
+        for (item_id, price, volume) in items {
+            map.entry(item_id).or_default().push((price, volume));
+        }
+
+        Ok(map)
+    }
+
+    pub async fn region_confirmed_sell_volume(&self, region_id: usize, last_hours: usize) -> Result<HashMap<usize, Vec<(f64, usize)>>, sqlx::Error> {
+        let lock = self.0.lock().await;
+        let mut connection = lock.acquire().await?;        
+        let region_id = region_id as i64;
+        let last_hours = format!("-{} hours", last_hours);
+        let items = sqlx::query!(r#"SELECT order_id, item_id, price, MAX(volume_remain) - MIN(volume_remain) as "fulfilled! : i64" FROM market_orders WHERE system_id IN (select id from eve_system where region_id = ?) AND buy_order=0 AND datetime(created) > datetime('now', ?) GROUP BY order_id, price"#, region_id, last_hours)
+        .map(|row| {
+            let item_id = row.item_id as usize;
+            let price = row.price;
+            let volume = row.fulfilled as usize;
+            
+            (item_id, price, volume)
+        })
+        .fetch_all(connection.as_mut()).await?;
+
+        let mut map: HashMap<usize, Vec<(f64, usize)>> = HashMap::new();
+        for (item_id, price, volume) in items {
+            map.entry(item_id).or_default().push((price, volume));
+        }
+
+        Ok(map)
     }
 }

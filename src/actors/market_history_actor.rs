@@ -7,6 +7,7 @@ use actix::{Actor, Context, Handler};
 
 use super::StartActor;
 
+#[derive(Debug)]
 pub struct MarketHistoryActor {
     pub region_id: usize,
     pub market_history_repository: MarketHistoryRepository,

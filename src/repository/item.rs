@@ -3,6 +3,7 @@ use std::{collections::HashSet, sync::Arc};
 use sqlx::SqlitePool;
 use tokio::sync::Mutex;
 
+#[derive(Debug)]
 pub struct ItemRepository(Arc<Mutex<SqlitePool>>);
 
 impl Clone for ItemRepository {

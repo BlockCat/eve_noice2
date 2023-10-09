@@ -62,6 +62,7 @@ impl EsiClient {
 
     pub async fn get_response(&self, path: &str) -> Result<Response, EsiError> {
         let path = format!("{}{}", BASE_URL, path);
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
         let permit = self
             .semaphore
             .acquire()

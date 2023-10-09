@@ -5,6 +5,7 @@ use crate::{
 };
 use actix::{Actor, Context, Handler};
 
+#[derive(Debug)]
 pub struct MarketOrderActor {
     pub region_id: usize,
     pub market_order_repository: MarketOrderRepository,
@@ -70,7 +71,7 @@ impl Handler<StartActor> for MarketOrderActor {
         });
 
         log::debug!("MarketOrderActor completed region: {}", self.region_id);
-        
+
         self.handle = Some(handle);
     }
 }

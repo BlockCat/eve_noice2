@@ -9,7 +9,7 @@ mod market_history_actor;
 mod market_order_actor;
 mod update_scheduler;
 
-#[derive(Message)]
+#[derive(Message, Debug)]
 #[rtype(result = "()")]
 pub struct StartActor;
 

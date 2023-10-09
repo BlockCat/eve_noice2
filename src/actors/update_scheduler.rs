@@ -3,6 +3,7 @@ use actix::{Actor, Context, Recipient};
 use tokio::task::JoinHandle;
 use tokio_cron_scheduler::{Job, JobScheduler};
 
+#[derive(Debug)]
 pub struct UpdateScheduler(String, Vec<Recipient<StartActor>>, Option<JoinHandle<()>>);
 
 impl UpdateScheduler {

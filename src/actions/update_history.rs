@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use chrono::{DateTime, Datelike, NaiveTime, TimeZone, Timelike, Utc};
 use futures::future::try_join_all;
 
@@ -96,6 +98,7 @@ pub async fn update_history_for_region(
                     chunk_len,
                     e
                 );
+                tokio::time::sleep(Duration::from_millis(400)).await;
                 if let EsiError::ErrorLimited = e {
                     return Err(UpdateError::MarketHistoryEsi(e, 0));
                 }
